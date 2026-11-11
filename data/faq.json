@@ -1,0 +1,27 @@
+[
+  {
+    "question": "What are your store hours?",
+    "keywords": ["hours", "open", "close", "timing"],
+    "answer": "We're open Monday to Saturday, 10am to 8pm. Closed on Sundays."
+  },
+  {
+    "question": "How do I return an item?",
+    "keywords": ["return", "returns", "send back", "exchange"],
+    "answer": "You can return any item within 14 days of delivery, unused and in its original packaging. Just reply here with your order ID and we'll send you a prepaid return label."
+  },
+  {
+    "question": "Do you deliver internationally?",
+    "keywords": ["international", "abroad", "outside country", "worldwide", "ship to"],
+    "answer": "Right now we only ship within the country. We're working on international shipping, hopefully later this year."
+  },
+  {
+    "question": "What payment methods do you accept?",
+    "keywords": ["payment", "pay", "credit card", "cash on delivery", "cod"],
+    "answer": "We accept credit/debit cards, bank transfer, and cash on delivery for local orders."
+  },
+  {
+    "question": "How can I change my shipping address?",
+    "keywords": ["change address", "wrong address", "update address"],
+    "answer": "If your order hasn't shipped yet, reply with your order ID and the new address and we'll update it. If it's already shipped, we won't be able to change it, sorry."
+  }
+]

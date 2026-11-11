@@ -1,0 +1,26 @@
+{
+  "ORD-2001": {
+    "customer": "Fatima Iqbal",
+    "item": "Ceramic Coffee Mug Set",
+    "status": "Out for Delivery",
+    "ordered_days_ago": 3,
+    "delivery_days": 3,
+    "amount": 24.99
+  },
+  "ORD-2002": {
+    "customer": "Usman Tariq",
+    "item": "Leather Wallet",
+    "status": "Delivered",
+    "ordered_days_ago": 9,
+    "delivery_days": 5,
+    "amount": 34.50
+  },
+  "ORD-2003": {
+    "customer": "Zainab Sheikh",
+    "item": "Yoga Mat",
+    "status": "Processing",
+    "ordered_days_ago": 1,
+    "delivery_days": 7,
+    "amount": 29.00
+  }
+}

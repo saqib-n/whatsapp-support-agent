@@ -1,0 +1,188 @@
+<div align="center">
+
+<h1>WhatsApp Support Agent</h1>
+
+<p><b>Answers customer questions on WhatsApp. It checks real order data, answers from the store's FAQ, and hands over to a person when it shouldn't be guessing.</b></p>
+
+<p>
+  <a href="https://github.com/saqib-n/whatsapp-support-agent/actions/workflows/tests.yml"><img src="https://github.com/saqib-n/whatsapp-support-agent/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
+  <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white" alt="Python: 3.12+">
+  <img src="https://img.shields.io/badge/FastAPI-webhook-009688?logo=fastapi&logoColor=white" alt="FastAPI: webhook">
+  <img src="https://img.shields.io/badge/WhatsApp-Cloud%20API-25D366?logo=whatsapp&logoColor=white" alt="WhatsApp: Cloud API">
+  <img src="https://img.shields.io/badge/models-OpenAI%20%7C%20Claude%20%7C%20Gemini-444444" alt="models: OpenAI | Claude | Gemini">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2E7D32" alt="license: MIT"></a>
+</p>
+
+<p>
+  <a href="#what-it-does">What it does</a> &nbsp;|&nbsp;
+  <a href="#how-it-works">How it works</a> &nbsp;|&nbsp;
+  <a href="#sample-run">Sample run</a> &nbsp;|&nbsp;
+  <a href="#quick-start">Quick start</a> &nbsp;|&nbsp;
+  <a href="#configuration">Configuration</a> &nbsp;|&nbsp;
+  <a href="#roadmap">Roadmap</a>
+</p>
+
+</div>
+
+<br>
+
+<h2>The problem</h2>
+
+<p>In many markets customers don't email, they message on WhatsApp. Small teams can't reply around the clock, and slow replies on a chat app feel slower than on any other channel.</p>
+
+<p>Most of those messages are "where is my order" and policy questions, which an agent can answer well, as long as it knows when to step aside.</p>
+
+<h2>What it does</h2>
+
+<table>
+  <tr><th align="left">Capability</th><th align="left">What that means in practice</th></tr>
+  <tr><td><b>Order status</b></td><td>Looks up the order and replies in a sentence or two.</td></tr>
+  <tr><td><b>FAQ answers</b></td><td>Store hours, returns, shipping and payment, from the store's own FAQ.</td></tr>
+  <tr><td><b>Escalation</b></td><td>Complaints, damaged items and anything uncertain go to a person with a ticket number.</td></tr>
+  <tr><td><b>Chat-style replies</b></td><td>Short and friendly, the way people actually write on WhatsApp.</td></tr>
+  <tr><td><b>Memory per customer</b></td><td>The phone number is the conversation ID, so each customer's history is kept separately.</td></tr>
+  <tr><td><b>Production webhook</b></td><td>Verifies Meta's signature, replies in the background so Meta never times out, and never answers the same message twice.</td></tr>
+</table>
+
+<h2>How it works</h2>
+
+<pre>
+WhatsApp --&gt; Meta Cloud API --&gt; POST /webhook (FastAPI)
+                                    | check signature, skip duplicates, return 200
+                                    v
+                         agent (tool calling, memory per phone number)
+                           |-- check_order_status
+                           |-- search_faq
+                           |-- escalate_to_human
+                                    |
+                                    v
+                    reply sent through the Graph API --&gt; customer
+</pre>
+
+<p>The agent is built with LangChain's <code>create_agent</code> and three tools. It decides which tool to call from the conversation. <code>app.py</code> is a FastAPI server that handles Meta's verification handshake and incoming messages.</p>
+
+<p><code>simulate_chat.py</code> runs exactly the same agent in the terminal, so you can test the logic before setting up a Meta developer account.</p>
+
+<h2>Decisions I made on purpose</h2>
+
+<h3>Escalation is the most important tool</h3>
+
+<p>Without it, the agent tries to resolve a complaint it has no authority over, which is worse than saying "let me get someone". Damaged items and upset customers go straight to a person.</p>
+
+<h3>Built for how webhooks fail in real life</h3>
+
+<p>Meta resends a message if the webhook is slow to respond, and it sends delivery receipts to the same endpoint. The server answers Meta first, generates the reply in the background, ignores non-text events and skips message IDs it has already handled.</p>
+
+<h2>Sample run</h2>
+
+<pre>
+$ python simulate_chat.py
+Customer: hey where's my order ORD-2001?
+Agent: Order ORD-2001 is out for delivery, should be with you today.
+
+Customer: what's your return policy
+Agent: 14 days from delivery, unused and in the original packaging. Send me
+your order ID and I'll get a return label out to you.
+
+Customer: my order came broken and honestly I'm pretty annoyed
+Agent: Sorry about that. I've passed this to our team, ticket WA-48213,
+someone will get back to you shortly.
+</pre>
+
+<h2>Quick start</h2>
+
+<p>You need Python 3.12 or newer and an API key from OpenAI, Anthropic or Google Gemini.</p>
+
+<pre>
+pip install -r requirements.txt
+cp .env.example .env        # on Windows: copy .env.example .env
+# open .env and paste your API key
+python simulate_chat.py        # no WhatsApp account needed
+</pre>
+
+<p>To connect a real number: create a Meta developer app with the WhatsApp product, put the access token, phone number ID, verify token and app secret in <code>.env</code>, run <code>uvicorn app:app --port 8000</code>, expose it with ngrok, and set the ngrok URL plus <code>/webhook</code> as the callback in the Meta app.</p>
+
+<h2>Configuration</h2>
+
+<p>Everything is set in <code>.env</code>. Copy <code>.env.example</code> to start.</p>
+
+<table>
+  <tr><th align="left">Variable</th><th align="left">Required</th><th align="left">Purpose</th></tr>
+  <tr><td><code>LLM_MODEL</code></td><td>Yes</td><td>Which model to use, as <code>provider:model</code>. Default <code>openai:gpt-5.5</code>. Also works with <code>anthropic:claude-opus-5-5</code> or <code>google_genai:gemini-3.5-flash</code>.</td></tr>
+  <tr><td><code>OPENAI_API_KEY / ANTHROPIC_API_KEY / GOOGLE_API_KEY</code></td><td>One of them</td><td>The key for whichever provider you picked.</td></tr>
+  <tr><td><code>WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID</code></td><td>For live WhatsApp</td><td>From the WhatsApp section of your Meta app.</td></tr>
+  <tr><td><code>WHATSAPP_VERIFY_TOKEN</code></td><td>For live WhatsApp</td><td>Any string you choose. Enter the same one in the Meta webhook settings.</td></tr>
+  <tr><td><code>WHATSAPP_APP_SECRET</code></td><td>Recommended</td><td>Lets the webhook reject requests that Meta didn't sign.</td></tr>
+  <tr><td><code>WHATSAPP_GRAPH_API_VERSION</code></td><td>No</td><td>Graph API version, default <code>v23.0</code>.</td></tr>
+</table>
+
+<h2>Project structure</h2>
+
+<pre>
+whatsapp-support-agent/
+  .env.example          # copy to .env and add your key
+  app.py                # FastAPI webhook for Meta
+  case_study.md         # longer write-up of the design
+  README.md
+  requirements.txt      # dependencies
+  simulate_chat.py      # same agent in the terminal
+  whatsapp_client.py    # payload parsing, signature check, sending
+  agent/
+    core.py             # the tool-calling agent and its memory
+    llm.py              # picks the model from LLM_MODEL
+    tools.py            # order lookup, FAQ search, escalation
+  data/
+    faq.json            # store FAQ
+    orders.json         # demo orders
+  tests/                # pytest suite, runs without any API key
+</pre>
+
+<h2>Built with</h2>
+
+<p>Python &nbsp;&middot;&nbsp; LangChain &nbsp;&middot;&nbsp; LangGraph &nbsp;&middot;&nbsp; FastAPI &nbsp;&middot;&nbsp; WhatsApp Cloud API &nbsp;&middot;&nbsp; OpenAI / Anthropic / Gemini</p>
+
+<h2>Tests</h2>
+
+<pre>
+pip install -r requirements-dev.txt
+pytest
+</pre>
+
+<p>Four tests cover the tools, parsing Meta's webhook payloads, the verify-token handshake, signature checking and duplicate messages. None of the tests call a model or need an API key, so they run on GitHub Actions on every push. The badge at the top shows the latest result.</p>
+
+<h2>Roadmap</h2>
+
+<p>What I would build next if a client took this into production:</p>
+<ul>
+  <li>Connect <code>check_order_status</code> to a real Shopify or WooCommerce store. It is the only file that changes.</li>
+  <li>Approved message templates, so the business can message customers first</li>
+  <li>A live takeover path, so a person can step into the conversation</li>
+  <li>Retries on the Graph API call, and a database for memory that survives restarts</li>
+</ul>
+
+<h2>More from this series</h2>
+
+<p>Nine production-minded AI agents, each solving one business problem properly.</p>
+
+<table>
+  <tr><td><a href="https://github.com/saqib-n/ai-research-report-agent"><b>Research Report Agent</b></a></td><td>Researches a topic, notices its own gaps, and writes a report with a source for every claim.</td></tr>
+  <tr><td><a href="https://github.com/saqib-n/ai-sales-outreach-agent"><b>AI Sales Outreach Agent</b></a></td><td>Personalised cold emails and follow-ups, with a human approving every send.</td></tr>
+  <tr><td><a href="https://github.com/saqib-n/ecommerce-automation-agent"><b>E-commerce Order and Inventory Agent</b></a></td><td>Shopify order, stock and returns assistant, plus a monitor that warns you before stock runs out.</td></tr>
+  <tr><td><a href="https://github.com/saqib-n/email-triage-agent"><b>Email Triage Agent</b></a></td><td>Sorts an inbox into four buckets and gives each one a different level of autonomy.</td></tr>
+  <tr><td><a href="https://github.com/saqib-n/lead-qualification-crm-agent"><b>Lead Qualification Agent</b></a></td><td>Scores inbound leads against your own rubric and pushes the good ones to HubSpot.</td></tr>
+  <tr><td><a href="https://github.com/saqib-n/multi-agent-customer-support"><b>Multi-Agent Customer Support</b></a></td><td>A router plus specialist agents for orders, refunds, FAQs and human handoff.</td></tr>
+  <tr><td><a href="https://github.com/saqib-n/rag-knowledge-base-agent"><b>RAG Knowledge Base Agent</b></a></td><td>Answers questions from your own documents and names the source for every answer.</td></tr>
+  <tr><td><a href="https://github.com/saqib-n/recruiting-screening-agent"><b>Resume Screening Agent</b></a></td><td>Ranks resumes against a job description with evidence, and guards against common bias.</td></tr>
+</table>
+
+<h2>Work with me</h2>
+
+<p>I'm Saqib Nawaz, founder of WolfXense AI. I build AI agents and automations for businesses, with Python, LangChain, LangGraph and n8n, and connect them to the tools teams already use, like CRMs, Shopify, Slack, email and WhatsApp.</p>
+
+<p>If your customers already message you on WhatsApp, I can put this agent on your business number and connect it to your store and your support team.</p>
+
+<p><a href="https://www.upwork.com/freelancers/~01de008504a38baf28"><b>Hire me on Upwork</b></a> &nbsp;|&nbsp; <a href="https://github.com/saqib-n"><b>More of my work on GitHub</b></a></p>
+
+<hr>
+
+<p><sub>Released under the <a href="LICENSE">MIT License</a>. A longer write-up of the design is in <a href="case_study.md">case_study.md</a>.</sub></p>
