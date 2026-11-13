@@ -26,6 +26,12 @@
 
 <br>
 
+<h2>See it in action</h2>
+
+<p align="center"><img src="demo/demo.gif" alt="Terminal recording of WhatsApp Support Agent running on Google Gemini" width="100%"></p>
+
+<p align="center"><sub>Recorded from a real run on Google Gemini (<code>gemini-3.5-flash-lite</code>) on 13 November 2026. Nothing is edited or scripted. Only the waiting time while the model thinks is shortened. <a href="demo/demo.mp4">Download the MP4</a>.</sub></p>
+
 <h2>The problem</h2>
 
 <p>In many markets customers don't email, they message on WhatsApp. Small teams can't reply around the clock, and slow replies on a chat app feel slower than on any other channel.</p>
@@ -120,21 +126,77 @@ python simulate_chat.py        # no WhatsApp account needed
 
 <pre>
 whatsapp-support-agent/
-  .env.example          # copy to .env and add your key
-  app.py                # FastAPI webhook for Meta
-  case_study.md         # longer write-up of the design
+  .env.example                                           # copy to .env and add your key
+  app.py                                                 # FastAPI webhook for Meta
+  case_study.md                                          # longer write-up of the design
   README.md
-  requirements.txt      # dependencies
-  simulate_chat.py      # same agent in the terminal
-  whatsapp_client.py    # payload parsing, signature check, sending
+  requirements.txt                                       # dependencies
+  simulate_chat.py                                       # same agent in the terminal
+  whatsapp_client.py                                     # payload parsing, signature check, sending
+  .git/
+    COMMIT_EDITMSG
+    config
+    description
+    HEAD
+    hooks/applypatch-msg.sample
+    hooks/commit-msg.sample
+    hooks/fsmonitor-watchman.sample
+    hooks/post-update.sample
+    hooks/pre-applypatch.sample
+    hooks/pre-commit.sample
+    hooks/pre-merge-commit.sample
+    hooks/pre-push.sample
+    hooks/pre-rebase.sample
+    hooks/pre-receive.sample
+    hooks/prepare-commit-msg.sample
+    hooks/push-to-checkout.sample
+    hooks/sendemail-validate.sample
+    hooks/update.sample
+    index
+    info/exclude
+    logs/HEAD
+    logs/refs/heads/main
+    logs/refs/remotes/origin/main
+    objects/0a/0dd6ab8d9c798d105ce3cb4f59324b31031010
+    objects/0d/19a37d674a332b9dba9f34ec54f3144a81a21f
+    objects/0e/d567ed746eec987287b20fc12524a4f0f877e3
+    objects/15/925932a7aa5cad524a68f3779b4b455784f944
+    objects/33/4eb9326b645cff160e7f58aa8ed9d63f15ab1f
+    objects/43/d88682322c845b6879879fed5881788492c2cd
+    objects/4c/1e1ee0d743e6d4f83d458691ecacaefaa2f210
+    objects/4c/7d4bb1c273a8fd5ce8122fa32b7b219f06499d
+    objects/4c/a5fdb69144c72d92c08fb1a4b652efa8f0f728
+    objects/76/5ea0ee31423f30a71cf708b625703dba6621d0
+    objects/78/998da0758f803a8b7d9b492206632524003f81
+    objects/7a/3a4f0ab20b8170a7b714479283340f5fe09e10
+    objects/80/22db0c622bc2e02082c92e87221137b24fdc89
+    objects/86/d481d72e7e256e20cf0810d14799cd9e3a9985
+    objects/8d/0e512c8f450a70858bb3c7948517c3a85e9075
+    objects/a2/667477f906e25e4d46862b73a0cf1d10163a78
+    objects/a8/797e939dd37fa4c495569b40386944a3bac87a
+    objects/a9/4d2c228b86e8fd4bf6a5bf0a58f78673c077d8
+    objects/b3/97d0ff545999d01d07b8055acabfe353ada6ae
+    objects/b6/ba7f396f5d43c49daa45317ad9de3cb56a97d6
+    objects/bb/1d0d20270c6b562a687dd6c5e21f3c4d7ba090
+    objects/c3/143003833131022a283eef1c2886b1f6f8c030
+    objects/c5/4aeb32cf364cf433dfb7c8ce58583bc231b3a2
+    objects/c5/97c23fa30e7a1e2dfac8278bb520f879e325c9
+    objects/e5/6d0464232e3f00c54b6317bcda0a87126ef783
+    objects/e6/747d718d63a1a9e561a622cf9959da52abfc2d
+    objects/e6/9de29bb2d1d6434b8b29ae775ad8c2e48c5391
+    refs/heads/main
+    refs/remotes/origin/main
   agent/
-    core.py             # the tool-calling agent and its memory
-    llm.py              # picks the model from LLM_MODEL
-    tools.py            # order lookup, FAQ search, escalation
+    core.py                                              # the tool-calling agent and its memory
+    llm.py                                               # picks the model from LLM_MODEL
+    tools.py                                             # order lookup, FAQ search, escalation
   data/
-    faq.json            # store FAQ
-    orders.json         # demo orders
-  tests/                # pytest suite, runs without any API key
+    faq.json                                             # store FAQ
+    orders.json                                          # demo orders
+  demo/
+    demo.gif
+    demo.mp4
+  tests/                                                 # pytest suite, runs without any API key
 </pre>
 
 <h2>Built with</h2>

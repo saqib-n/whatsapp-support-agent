@@ -13,6 +13,8 @@ Try:
     my order arrived broken, I want a refund
 """
 
+import sys
+
 from dotenv import load_dotenv
 
 from agent.core import reply_to_message
@@ -21,6 +23,11 @@ load_dotenv()
 
 
 def main():
+    # Windows terminals default to a code page that can't print every
+    # character a model might send back, so switch to UTF-8.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
     fake_phone_number = "923001234567"
     print("WhatsApp Support Agent (simulated chat), type 'exit' to quit\n")
 
