@@ -28,9 +28,9 @@
 
 <h2>See it in action</h2>
 
-<p align="center"><img src="demo/demo.gif" alt="Terminal recording of WhatsApp Support Agent running on Google Gemini" width="100%"></p>
+<p align="center"><img src="demo/demo.gif" alt="WhatsApp-style chat with the support agent, with a panel showing each tool the agent calls" width="100%"></p>
 
-<p align="center"><sub>Recorded from a real run on Google Gemini (<code>gemini-3.5-flash-lite</code>) on 13 November 2026. Nothing is edited or scripted. Only the waiting time while the model thinks is shortened. <a href="demo/demo.mp4">Download the MP4</a>.</sub></p>
+<p align="center"><sub>Recorded in the built-in chat screen from a real run on Google Gemini (<code>gemini-3.5-flash-lite</code>) on 13 November 2026, in real time. Nothing is edited or scripted. The panel on the right shows every tool the agent called, what it got back and how long the reply took. <a href="demo/demo.mp4">Download the MP4</a>.</sub></p>
 
 <h2>The problem</h2>
 
@@ -67,7 +67,7 @@ WhatsApp --&gt; Meta Cloud API --&gt; POST /webhook (FastAPI)
 
 <p>The agent is built with LangChain's <code>create_agent</code> and three tools. It decides which tool to call from the conversation. <code>app.py</code> is a FastAPI server that handles Meta's verification handshake and incoming messages.</p>
 
-<p><code>simulate_chat.py</code> runs exactly the same agent in the terminal, so you can test the logic before setting up a Meta developer account.</p>
+<p>The same server also has a chat screen at <code>/</code>, so you can try the agent in the browser before setting up a Meta developer account. It runs exactly the same agent, and a side panel shows each tool call and its result. <code>simulate_chat.py</code> does the same in the terminal.</p>
 
 <h2>Decisions I made on purpose</h2>
 
@@ -81,18 +81,23 @@ WhatsApp --&gt; Meta Cloud API --&gt; POST /webhook (FastAPI)
 
 <h2>Sample run</h2>
 
+<p>From the recording above, word for word:</p>
+
 <pre>
-$ python simulate_chat.py
-Customer: hey where's my order ORD-2001?
-Agent: Order ORD-2001 is out for delivery, should be with you today.
+Customer: Hi, where is my order ORD-2001?
+  tool:   check_order_status(order_id="ORD-2001")
+Agent:    Your Ceramic Coffee Mug Set is out for delivery today, November 13th!
 
-Customer: what's your return policy
-Agent: 14 days from delivery, unused and in the original packaging. Send me
-your order ID and I'll get a return label out to you.
+Customer: What's your return policy?
+  tool:   search_faq
+Agent:    You can return any item within 14 days of delivery if it is unused
+          and in its original packaging. Let me know if you need a return label!
 
-Customer: my order came broken and honestly I'm pretty annoyed
-Agent: Sorry about that. I've passed this to our team, ticket WA-48213,
-someone will get back to you shortly.
+Customer: My order ORD-2002 arrived broken and honestly I'm pretty annoyed
+  tool:   escalate_to_human(reason="Order ORD-2002 arrived damaged and customer is complaining.")
+Agent:    I am so sorry to hear that. I have escalated this to a human agent and
+          someone will follow up with you shortly to make it right.
+          (ticket WA-71953)
 </pre>
 
 <h2>Quick start</h2>
@@ -103,10 +108,12 @@ someone will get back to you shortly.
 pip install -r requirements.txt
 cp .env.example .env        # on Windows: copy .env.example .env
 # open .env and paste your API key
-python simulate_chat.py        # no WhatsApp account needed
+python app.py                  # opens the chat screen at http://localhost:8000
 </pre>
 
-<p>To connect a real number: create a Meta developer app with the WhatsApp product, put the access token, phone number ID, verify token and app secret in <code>.env</code>, run <code>uvicorn app:app --port 8000</code>, expose it with ngrok, and set the ngrok URL plus <code>/webhook</code> as the callback in the Meta app.</p>
+<p>No WhatsApp account is needed for the chat screen. Prefer the terminal? Run <code>python simulate_chat.py</code>.</p>
+
+<p>To connect a real number: create a Meta developer app with the WhatsApp product, put the access token, phone number ID, verify token and app secret in <code>.env</code>, run <code>python app.py</code> (or <code>uvicorn app:app --port 8000</code> on a server), expose it with ngrok, and set the ngrok URL plus <code>/webhook</code> as the callback in the Meta app.</p>
 
 <h2>Configuration</h2>
 
@@ -127,7 +134,7 @@ python simulate_chat.py        # no WhatsApp account needed
 <pre>
 whatsapp-support-agent/
   .env.example          # copy to .env and add your key
-  app.py                # FastAPI webhook for Meta
+  app.py                # FastAPI: chat screen, chat API and the Meta webhook
   case_study.md         # longer write-up of the design
   README.md
   requirements.txt      # dependencies
@@ -140,8 +147,10 @@ whatsapp-support-agent/
   data/
     faq.json            # store FAQ
     orders.json         # demo orders
-  demo/                 # recording of a live run (GIF and MP4)
+  demo/                 # recording of a live run (GIF, MP4 and a screenshot)
   tests/                # pytest suite, runs without any API key
+  web/
+    index.html          # the chat screen, one file, no build step
 </pre>
 
 <h2>Built with</h2>
@@ -155,7 +164,7 @@ pip install -r requirements-dev.txt
 pytest
 </pre>
 
-<p>Four tests cover the tools, parsing Meta's webhook payloads, the verify-token handshake, signature checking and duplicate messages. None of the tests call a model or need an API key, so they run on GitHub Actions on every push. The badge at the top shows the latest result.</p>
+<p>Five tests cover the tools, parsing Meta's webhook payloads, the verify-token handshake, signature checking, duplicate messages, and the chat screen and its API. None of the tests call a model or need an API key, so they run on GitHub Actions on every push. The badge at the top shows the latest result.</p>
 
 <h2>Roadmap</h2>
 

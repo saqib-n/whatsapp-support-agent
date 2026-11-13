@@ -44,8 +44,12 @@ def get_agent(model: str | None = None):
     return _graph
 
 
-def reply_to_message(phone_number: str, text: str) -> str:
-    """Run the agent for one incoming message and return the reply text.
+def run_turn(phone_number: str, text: str) -> dict:
+    """Run the agent for one incoming message.
+
+    Returns the reply text plus every tool the agent called on the way, in
+    order, as {"name", "args", "result"} dicts. The web demo shows those
+    steps next to the chat so you can see why the agent said what it said.
 
     phone_number is used as the thread_id, so each customer's conversation
     history is kept separate.
@@ -53,4 +57,25 @@ def reply_to_message(phone_number: str, text: str) -> str:
     agent = get_agent()
     config = {"configurable": {"thread_id": phone_number}}
     result = agent.invoke({"messages": [{"role": "user", "content": text}]}, config=config)
-    return result["messages"][-1].text
+    messages = result["messages"]
+
+    # The thread holds the whole conversation, so only look at the messages
+    # this turn added: everything after the last customer message.
+    start = max(i for i, m in enumerate(messages) if m.type == "human") + 1
+    tool_steps = []
+    for message in messages[start:]:
+        for call in getattr(message, "tool_calls", None) or []:
+            tool_steps.append({"id": call.get("id"), "name": call["name"], "args": call.get("args", {}), "result": None})
+        if message.type == "tool":
+            for step in tool_steps:
+                if step["id"] == message.tool_call_id:
+                    step["result"] = message.text
+    for step in tool_steps:
+        step.pop("id")
+
+    return {"reply": messages[-1].text, "tools": tool_steps}
+
+
+def reply_to_message(phone_number: str, text: str) -> str:
+    """Run the agent for one incoming message and return just the reply text."""
+    return run_turn(phone_number, text)["reply"]

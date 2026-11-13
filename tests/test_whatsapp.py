@@ -37,6 +37,31 @@ def test_verify_handshake(monkeypatch):
     assert (ok.status_code, ok.text) == (200, "42")
 
 
+def test_chat_screen_and_api(monkeypatch):
+    calls = []
+
+    def fake_turn(phone_number, text):
+        calls.append((phone_number, text))
+        return {"reply": "On its way.", "tools": [{"name": "check_order_status", "args": {"order_id": "ORD-2001"}, "result": "Out for Delivery"}]}
+
+    monkeypatch.setattr(webhook, "run_turn", fake_turn)
+    client = TestClient(webhook.app)
+
+    page = client.get("/")
+    assert page.status_code == 200 and "Behind the scenes" in page.text
+
+    reply = client.post("/api/chat", json={"session_id": "abc", "text": "  where is ORD-2001?  "}).json()
+    assert reply["reply"] == "On its way." and reply["tools"][0]["name"] == "check_order_status"
+    assert calls == [("web-abc", "where is ORD-2001?")]
+    assert client.post("/api/chat", json={"session_id": "abc", "text": ""}).status_code == 422
+
+    def broken_turn(phone_number, text):
+        raise RuntimeError("quota")
+
+    monkeypatch.setattr(webhook, "run_turn", broken_turn)
+    assert client.post("/api/chat", json={"session_id": "abc", "text": "hi"}).status_code == 502
+
+
 def test_signature_and_duplicates(monkeypatch):
     handled = []
     monkeypatch.setattr(webhook, "handle_message", lambda number, text: handled.append(text))
