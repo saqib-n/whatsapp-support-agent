@@ -30,7 +30,7 @@
 
 <p align="center"><img src="demo/demo.gif" alt="WhatsApp-style chat with the support agent, with a panel showing each tool the agent calls" width="100%"></p>
 
-<p align="center"><sub>Recorded in the built-in chat screen from a real run on Google Gemini (<code>gemini-3.5-flash-lite</code>) on 13 November 2026, in real time. Nothing is edited or scripted. The panel on the right shows every tool the agent called, what it got back and how long the reply took. <a href="demo/demo.mp4">Download the MP4</a>.</sub></p>
+<p align="center"><sub>Recorded in the built-in chat screen from a real run on Google Gemini (<code>gemini-3.1-flash-lite</code>) on 14 November 2026. Nothing is scripted. Only the time spent waiting for the model is fast-forwarded, and the real response times are shown on screen. The panel on the right shows every tool the agent called, what it got back and how long the reply took. <a href="demo/demo.mp4">Download the MP4</a>.</sub></p>
 
 <h2>The problem</h2>
 
@@ -86,18 +86,21 @@ WhatsApp --&gt; Meta Cloud API --&gt; POST /webhook (FastAPI)
 <pre>
 Customer: Hi, where is my order ORD-2001?
   tool:   check_order_status(order_id="ORD-2001")
-Agent:    Your Ceramic Coffee Mug Set is out for delivery today, November 13th!
+Agent:    Your order for the Ceramic Coffee Mug Set is out for delivery today,
+          November 14.
 
 Customer: What's your return policy?
-  tool:   search_faq
-Agent:    You can return any item within 14 days of delivery if it is unused
-          and in its original packaging. Let me know if you need a return label!
+  tool:   search_faq(query="return policy")
+Agent:    You can return any item within 14 days of delivery, as long as it is
+          unused and in its original packaging. Just send me your order ID if
+          you would like to start a return.
 
 Customer: My order ORD-2002 arrived broken and honestly I'm pretty annoyed
-  tool:   escalate_to_human(reason="Order ORD-2002 arrived damaged and customer is complaining.")
-Agent:    I am so sorry to hear that. I have escalated this to a human agent and
-          someone will follow up with you shortly to make it right.
-          (ticket WA-71953)
+  tool:   escalate_to_human(reason="Customer reported order ORD-2002 arrived broken and is expressing frustration.")
+Agent:    I am very sorry to hear that your order arrived broken. I have escalated
+          this to a member of our support team and someone will follow up with
+          you shortly to resolve this.
+          (ticket WA-26130)
 </pre>
 
 <h2>Quick start</h2>
